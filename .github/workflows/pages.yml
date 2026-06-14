@@ -1,0 +1,58 @@
+name: Deploy to GitHub Pages
+
+# Builds the TypeScript with esbuild and publishes the static site (including
+# debug/gallery.html) to GitHub Pages.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Permissions required by the GitHub Pages deploy action.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deploy; cancel older in-progress runs.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build (esbuild -> main.js + gallery.js)
+        run: npm run build
+
+      - name: Assemble site
+        run: |
+          mkdir -p _site/debug
+          cp index.html styles.css main.js main.js.map gallery.js gallery.js.map _site/
+          cp debug/gallery.html _site/debug/
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
