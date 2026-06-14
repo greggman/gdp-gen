@@ -1,0 +1,19 @@
+{
+  "name": "gdp-gen",
+  "version": "0.1.0",
+  "description": "Random rule-driven graphic design poster generator (HTML/SVG)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs --watch --serve",
+    "check": "tsc --noEmit",
+    "lint": "gts lint",
+    "fix": "gts fix"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.1",
+    "gts": "^7.0.0",
+    "typescript": "^6.0.3"
+  }
+}
