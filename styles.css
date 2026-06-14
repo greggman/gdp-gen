@@ -14,17 +14,14 @@ body {
 }
 
 body {
-  display: grid;
-  place-items: center;
   background: #111;
   font-family: system-ui, sans-serif;
   overflow: hidden;
 }
 
 #stage {
-  width: min(92vw, 92vh * 0.707);
-  aspect-ratio: 1 / 1.414;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  width: 100vw;
+  height: 100vh;
   background: #fff;
 
   & svg {

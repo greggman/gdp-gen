@@ -17,8 +17,8 @@ const preferredPort = Number(process.env.PORT) || 8080;
 
 /** @type {import('esbuild').BuildOptions} */
 const buildOptions = {
-  entryPoints: [join(root, 'src/main.ts')],
-  outfile: join(root, 'main.js'),
+  entryPoints: [join(root, 'src/main.ts'), join(root, 'src/gallery.ts')],
+  outdir: root,
   bundle: true,
   format: 'iife',
   target: 'es2020',

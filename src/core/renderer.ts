@@ -2,6 +2,13 @@
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
+let idCounter = 0;
+
+/** A short unique id for clip paths, gradients, etc. within the document. */
+export function uid(prefix = 'id'): string {
+  return `${prefix}-${(idCounter++).toString(36)}`;
+}
+
 /** Creates an SVG element of the given tag with attributes applied. */
 export function svgEl<K extends keyof SVGElementTagNameMap>(
   tag: K,
@@ -20,7 +27,9 @@ export function svgEl<K extends keyof SVGElementTagNameMap>(
 export function createRoot(width: number, height: number): SVGSVGElement {
   const svg = svgEl('svg', {
     viewBox: `0 0 ${width} ${height}`,
-    preserveAspectRatio: 'xMidYMid meet',
+    // Cover the viewport (crop overflow) rather than letterbox, so a design
+    // generated at one size still fills the page after a resize.
+    preserveAspectRatio: 'xMidYMid slice',
   });
   svg.setAttribute('xmlns', SVG_NS);
   return svg;
