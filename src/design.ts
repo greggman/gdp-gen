@@ -6,7 +6,7 @@
 import {generatePalette} from './color/palette.js';
 import {Context} from './core/context.js';
 import {makeRng, Rng} from './core/rng.js';
-import {pickComposition} from './core/registry.js';
+import {getComposition, pickComposition} from './core/registry.js';
 import {createRoot} from './core/renderer.js';
 import {TextSettings} from './core/types.js';
 import './generators/index.js'; // registers all generators (used by compositions)
@@ -28,19 +28,35 @@ function chooseText(rng: Rng): TextSettings {
   };
 }
 
+/** Options for forcing parts of the pipeline (used by the debug gallery). */
+export interface BuildOptions {
+  /** Force a specific composition by name (else chosen from the seed). */
+  composition?: string;
+  /** Force text on/off (else chosen from the seed). */
+  textEnabled?: boolean;
+}
+
 /** Builds and returns a finished design SVG for `seed` at `width` x `height`. */
-export function buildDesign(seed: string, width: number, height: number): SVGSVGElement {
+export function buildDesign(
+  seed: string,
+  width: number,
+  height: number,
+  opts: BuildOptions = {},
+): SVGSVGElement {
   const rng = makeRng(seed);
   const root = createRoot(width, height);
+  const text = chooseText(rng);
+  if (opts.textEnabled !== undefined) text.enabled = opts.textEnabled;
   const ctx = new Context({
     rng,
     width,
     height,
     palette: generatePalette(rng),
-    text: chooseText(rng),
+    text,
     root,
   });
-  const composition = pickComposition(rng);
+  const composition =
+    (opts.composition && getComposition(opts.composition)) || pickComposition(rng);
   root.setAttribute('data-composition', composition.name);
   composition.render(ctx);
   return root;

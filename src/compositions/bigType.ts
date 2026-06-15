@@ -7,6 +7,7 @@ import {registerComposition} from '../core/registry.js';
 import {DesignContext} from '../core/types.js';
 import {drawLine, fitSizeToWidth, measureWidth} from '../typography/fitText.js';
 import {
+  backdrop,
   displaySize,
   fillBackground,
   heavyWeight,
@@ -41,6 +42,9 @@ function render(ctx: DesignContext): void {
     }
     return;
   }
+
+  // Optional muted backdrop texture so the field behind the type isn't flat.
+  backdrop(ctx, 0.5);
 
   // Stack the headline words as huge lines, each overflowing the width.
   const words = bundle.headline.split(/\s+/).filter(Boolean);

@@ -6,9 +6,9 @@
  */
 import {registerComposition} from '../core/registry.js';
 import {Color, DesignContext} from '../core/types.js';
-import {fitSizeToWidth, measureWidth, drawLine} from '../typography/fitText.js';
+import {drawLine, fitSizeToWidth} from '../typography/fitText.js';
 import {
-  block,
+  backdrop,
   displaySize,
   fillBackground,
   heavyWeight,
@@ -37,18 +37,11 @@ function render(ctx: DesignContext): void {
   const {rng, palette} = ctx;
   const bundle = textBundle(ctx);
 
-  // Bold color blocking: pick a strong field color and a contrasting glyph.
-  const fieldColor: Color = regionFill(ctx, rng);
-  const bgColor = rng.chance(0.55) ? palette.background : fieldColor;
+  // A flat, bold color field (the classic mega-numeral stage), with an optional
+  // MUTED backdrop texture for interest -- no rectangle around the number.
+  const bgColor: Color = rng.chance(0.6) ? regionFill(ctx, rng) : palette.background;
   fillBackground(ctx, bgColor);
-
-  // A large generator field occupies a big asymmetric band so the texture is a
-  // protagonist, not an accent. The giant glyph overlaps it.
-  const bandFromLeft = rng.chance(0.5);
-  const bandFrac = rng.range(0.45, 0.7);
-  const bandW = ctx.width * bandFrac;
-  const bandX = bandFromLeft ? 0 : ctx.width - bandW;
-  ctx.fillRegion({x: bandX, y: 0, w: bandW, h: ctx.height});
+  backdrop(ctx, 0.5);
 
   // Determine the glyph string (from the label when text exists).
   const glyph = pickGlyph(ctx, bundle ? bundle.label : null);
@@ -61,27 +54,17 @@ function render(ctx: DesignContext): void {
   const byWidth = fitSizeToWidth(glyph, ctx.width * rng.range(0.95, 1.3), probe);
   const size = Math.min(targetH, byWidth);
   const glyphStyle = textStyle(ctx, size, weight);
-  const glyphW = measureWidth(glyph, glyphStyle);
 
-  // Anchor the glyph hard to one side and let it overhang.
+  // Anchor the glyph hard to one side and let it overhang -- straight on the
+  // flat field, no backing plate. Its color is contrast-corrected vs the field.
+  const fromLeft = rng.chance(0.5);
   const overhang = size * rng.range(0.04, 0.16);
-  const glyphX = bandFromLeft ? ctx.width - overhang : overhang;
-  const anchor = bandFromLeft ? 'end' : 'start';
+  const glyphX = fromLeft ? ctx.width - overhang : overhang;
+  const anchor = fromLeft ? 'end' : 'start';
   const glyphY = ctx.height * 0.5 + size * 0.36;
-
-  // The glyph sits over both the texture band and the flat field; back it with a
-  // solid plate so contrast is guaranteed regardless of texture beneath.
-  const plateColor = rng.chance(0.5) ? fieldColor : palette.primary;
-  const plateW = glyphW + size * 0.3;
-  const plateX = anchor === 'end' ? glyphX - plateW + overhang * 0.5 : glyphX - overhang * 0.5;
-  block(
-    ctx,
-    {x: plateX, y: 0, w: plateW, h: ctx.height},
-    plateColor,
-  );
-  const glyphFill = rng.chance(0.5) ? palette.background : palette.accent;
+  const glyphFill = rng.chance(0.5) ? palette.primary : palette.accent;
   drawLine(ctx, glyphX, glyphY, glyph, glyphStyle, {
-    bg: plateColor,
+    bg: bgColor,
     fill: glyphFill,
     minContrast: 3,
     anchor,

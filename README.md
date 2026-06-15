@@ -9,9 +9,9 @@ Notes:
 1. Click the ⟳ button in the top right to generate a new poster
 2. The text is semi-random characters, not real words.
 
-[Compositions](https://greggman.github.io/gdp-gen/debug/gallery.html?comps=1&from=0&count=2000)
+[Compositions](https://greggman.github.io/gdp-gen/debug/gallery.html?comps&from=0&count=2000&rand)
 
-[Generators](https://greggman.github.io/gdp-gen/debug/gallery.html?gens=1&from=0&count=2000)
+[Generators](https://greggman.github.io/gdp-gen/debug/gallery.html?gens&from=0&count=2000)
 
 ---
 

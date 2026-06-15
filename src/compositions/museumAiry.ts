@@ -10,6 +10,7 @@ import {Color, DesignContext, Rect} from '../core/types.js';
 import {GOLDEN, splitX, splitY} from '../layout/geometry.js';
 import {drawHeadline, drawLine, fitSizeToWidth, measureWidth} from '../typography/fitText.js';
 import {
+  backdrop,
   block,
   displaySize,
   fillBackground,
@@ -24,6 +25,9 @@ function render(ctx: DesignContext): void {
   const {rng, palette} = ctx;
   const bg: Color = palette.background;
   fillBackground(ctx, bg);
+  // A very occasional, very faint backdrop -- keeps the airiness but breaks up
+  // the largest empty fields.
+  backdrop(ctx, 0.3);
 
   const rtl = isRtl(ctx);
   const startAlign = rtl ? 'end' : 'start';

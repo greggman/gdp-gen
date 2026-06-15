@@ -12,6 +12,7 @@ import {
   block,
   displaySize,
   fillBackground,
+  fillFocal,
   heavyWeight,
   isRtl,
   margin,
@@ -56,7 +57,8 @@ function render(ctx: DesignContext): void {
     ctx.root.appendChild(clip);
     const g = ctx.group();
     g.setAttribute('clip-path', `url(#${clipId})`);
-    ctx.fillRegion({x: c.x - radius, y: c.y - radius, w: radius * 2, h: radius * 2}, g);
+    // The medallion is a natural home for a rendered 3D object.
+    fillFocal(ctx, {x: c.x - radius, y: c.y - radius, w: radius * 2, h: radius * 2}, g, 0.55);
   } else {
     ctx.root.appendChild(
       ctx.el('circle', {cx: c.x, cy: c.y, r: radius, fill: palette.primary}),

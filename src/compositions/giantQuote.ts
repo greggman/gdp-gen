@@ -10,6 +10,7 @@ import {Color, DesignContext, Rect} from '../core/types.js';
 import {inset} from '../layout/geometry.js';
 import {drawLine, fitSizeToWidth, measureWidth, wrapText} from '../typography/fitText.js';
 import {
+  backdrop,
   block,
   displaySize,
   fillBackground,
@@ -55,6 +56,9 @@ function render(ctx: DesignContext): void {
   const anchor = rtl ? 'end' : 'start';
   const weight = heavyWeight(ctx);
   const m = margin(ctx, 0.06);
+
+  // Optional muted backdrop so the large negative space isn't bare.
+  backdrop(ctx, 0.5);
 
   // The pull-quote text: build from body lines for length, fall back to sub.
   const quoteSource =

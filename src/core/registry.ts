@@ -46,3 +46,8 @@ export function pickGenerator(rng: Rng, category?: string): Generator {
 export function getGenerator(name: string): Generator | undefined {
   return generators.find(g => g.name === name);
 }
+
+/** Finds a composition by exact name. */
+export function getComposition(name: string): Composition | undefined {
+  return compositions.find(c => c.name === name);
+}

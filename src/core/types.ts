@@ -87,6 +87,10 @@ export interface DesignContext {
   ): SVGElementTagNameMap[K];
   /** Creates a <g> group, optionally appended to a parent. */
   group(parent?: SVGElement): SVGGElement;
-  /** Stamps a random (or named) generator into the given region. */
-  fillRegion(bounds: Rect, parent?: SVGElement, name?: string): SVGElement;
+  /**
+   * Stamps a generator into the given region. With `name`, uses that exact
+   * generator; otherwise picks a random one, optionally restricted to a
+   * `category` (e.g. 'object' for the 3D solids).
+   */
+  fillRegion(bounds: Rect, parent?: SVGElement, name?: string, category?: string): SVGElement;
 }

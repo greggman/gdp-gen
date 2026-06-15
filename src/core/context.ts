@@ -1,6 +1,6 @@
 /** Concrete DesignContext implementation passed to compositions/generators. */
 import {Rng} from './rng.js';
-import {DesignContext, Palette, Rect, TextSettings} from './types.js';
+import {DesignContext, Generator, Palette, Rect, TextSettings} from './types.js';
 import {svgEl} from './renderer.js';
 import {getGenerator, pickGenerator} from './registry.js';
 
@@ -48,8 +48,8 @@ export class Context implements DesignContext {
     return g;
   }
 
-  fillRegion(bounds: Rect, parent?: SVGElement, name?: string): SVGElement {
-    const gen = name ? getGenerator(name) : safePick(this.rng);
+  fillRegion(bounds: Rect, parent?: SVGElement, name?: string, category?: string): SVGElement {
+    const gen = name ? getGenerator(name) : safePick(this.rng, category);
     let node: SVGElement;
     if (gen) {
       node = gen.render(this, bounds);
@@ -68,10 +68,11 @@ export class Context implements DesignContext {
   }
 }
 
-function safePick(rng: Rng) {
+function safePick(rng: Rng, category?: string): Generator | undefined {
   try {
-    return pickGenerator(rng);
+    return pickGenerator(rng, category);
   } catch {
-    return undefined;
+    // No generators (or none in the category) -- fall through to a flat fill.
+    return category ? safePick(rng) : undefined;
   }
 }

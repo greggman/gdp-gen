@@ -34,6 +34,10 @@ These apply to every mode:
 Because each tile's `viewBox` is `0 0 w h` and its `width`/`height` attributes
 are also `w`/`h`, rendering is 1:1 — no distortion at any size.
 
+Tiles are fixed-size and **wrap to the viewport width** (CSS grid `auto-fill`),
+so there is no `cols` parameter — make the window wider/narrower (or set
+`--window-size` in headless) to change how many columns fit.
+
 ## Modes
 
 Exactly one mode runs per load. They are checked in this precedence order:
@@ -45,16 +49,15 @@ by the presence of its trigger param.
 A grid of random designs, seeded `<seed>-0`, `<seed>-1`, … Good for judging the
 *typical* output across many seeds.
 
-| param  | default     | meaning |
-|--------|-------------|---------|
-| `cols` | `4`         | columns |
-| `rows` | `3`         | rows (total tiles = `cols × rows`) |
-| `seed` | `gallery`   | seed prefix; tile *i* uses seed `<seed>-<i>` |
+| param   | default   | meaning |
+|---------|-----------|---------|
+| `count` | `12`      | number of designs to render (they wrap to the viewport) |
+| `seed`  | `gallery` | seed prefix; tile *i* uses seed `<seed>-<i>` |
 
 Tile label: the seed.
 
 ```
-/debug/gallery.html?cols=5&rows=4&w=340&h=255&seed=mixA
+/debug/gallery.html?count=20&w=340&h=255&seed=mixA
 ```
 
 ### 2. `?exact=<seed>` — one specific seed, full tile
@@ -81,10 +84,9 @@ attribute), e.g. `1jcwkjk1chz  [tracklist]`.
 | param  | default | meaning |
 |--------|---------|---------|
 | `exacts` | —     | comma-separated seeds |
-| `cols` | `2`     | columns |
 
 ```
-/debug/gallery.html?exacts=1jcrexc6bod,1jcslncrvi,1jcswp812xf&cols=1&w=900&h=480
+/debug/gallery.html?exacts=1jcrexc6bod,1jcslncrvi,1jcswp812xf&w=900&h=480
 ```
 
 ### 4. `?gens` — generator showcase
@@ -95,31 +97,40 @@ disabled; the generator fills the whole tile). Label: `name (category)`.
 | param   | default | meaning |
 |---------|---------|---------|
 | `gens`  | —       | presence enables the mode (value ignored) |
-| `cols`  | `4`     | columns |
 | `from`  | `0`     | index of the first generator to render (alphabetical registration order) |
 | `count` | `1000`  | how many generators to render — use with `from` to paginate |
 
 ```
-/debug/gallery.html?gens=1&cols=4&w=330&h=240&from=0&count=28
+/debug/gallery.html?gens=1&w=330&h=240&from=0&count=28
 ```
 
 ### 5. `?comps` — composition showcase
 
-Renders **every registered composition** by name into a labeled tile, using a
-fixed seed per composition (so it's deterministic). Default uses Japanese text.
-Label: `name`, or `name (no text)` when `notext` is set.
+Renders **every registered composition** through the real design pipeline
+(random palette + **random script** per seed — not always Japanese), forcing
+each composition. Every tile is wrapped in a link to the **full-page render of
+that exact seed** (`../index.html#<seed>~<composition>`), so you can click a tile
+to pull it out at full size.
 
-| param    | default | meaning |
-|----------|---------|---------|
-| `comps`  | —       | presence enables the mode (value ignored) |
-| `notext` | (unset) | presence renders the **no-text** path of each composition |
-| `cols`   | `4`     | columns |
-| `from`   | `0`     | index of the first composition (alphabetical) |
-| `count`  | `1000`  | how many to render — use with `from` to paginate |
+| param     | default | meaning |
+|-----------|---------|---------|
+| `comps`   | —       | presence enables the mode (value ignored) |
+| `comp`    | (all)   | restrict to a **single composition by name** (e.g. `comp=big-type`) |
+| `samples` | `1`     | tiles to render **per composition** (e.g. `samples=4` shows 4 examples of each) |
+| `rand`    | (unset) | presence uses a **fresh random seed per tile** — reload for new examples |
+| `notext`  | (unset) | presence forces the **no-text** path |
+| `from`    | `0`     | index of the first composition (alphabetical) |
+| `count`   | `1000`  | how many compositions — use with `from` to paginate |
+
+Without `rand`, seeds are deterministic (`<composition>-<sample>`), so the page
+is stable for QA; with `rand` each reload shows fresh examples. Click any tile to
+open the live page with that seed + composition forced.
 
 ```
-/debug/gallery.html?comps=1&cols=4&w=350&h=240            # with text
-/debug/gallery.html?comps=1&notext&cols=4&w=350&h=240     # no-text paths
+/debug/gallery.html?comps=1&w=350&h=240                  # one each, stable
+/debug/gallery.html?comps=1&rand&samples=3&w=280&h=200   # 3 random each
+/debug/gallery.html?comps=1&comp=big-type&samples=10     # 10 of ONE comp
+/debug/gallery.html?comps=1&notext&w=350&h=240           # no-text paths
 ```
 
 ### 6. `?shot=<seed>` — clean single design (for screenshots)

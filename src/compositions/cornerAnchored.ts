@@ -8,9 +8,11 @@ import {registerComposition} from '../core/registry.js';
 import {DesignContext, Rect} from '../core/types.js';
 import {drawHeadline, drawParagraph} from '../typography/fitText.js';
 import {
+  backdrop,
   block,
   displaySize,
   fillBackground,
+  fillFocal,
   heavyWeight,
   isRtl,
   margin,
@@ -45,16 +47,19 @@ function render(ctx: DesignContext): void {
     return;
   }
 
+  // Muted backdrop fills the large negative-space field behind the corner text.
+  backdrop(ctx, 0.5);
+
   const blockW = Math.min(ctx.width, ctx.height) * rng.range(0.28, 0.42);
   const blockH = blockW;
-  // Counterweight block in the OPPOSITE corner.
+  // Counterweight block in the OPPOSITE corner -- often a rendered 3D object.
   const counter: Rect = {
     x: right ? m : ctx.width - m - blockW,
     y: bottom ? m : ctx.height - m - blockH,
     w: blockW,
     h: blockH,
   };
-  ctx.fillRegion(counter);
+  fillFocal(ctx, counter, undefined, 0.5);
 
   const colW = Math.min(ctx.width - m * 2, ctx.width * rng.range(0.45, 0.6));
   const colX = right ? ctx.width - m - colW : m;

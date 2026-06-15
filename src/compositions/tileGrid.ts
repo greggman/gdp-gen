@@ -10,6 +10,7 @@ import {drawHeadline} from '../typography/fitText.js';
 import {
   block,
   displaySize,
+  fillFocal,
   heavyWeight,
   isRtl,
   textBundle,
@@ -33,7 +34,8 @@ function render(ctx: DesignContext): void {
       block(ctx, cell, palette.background);
       return;
     }
-    ctx.fillRegion(cell);
+    // A few cells become rendered 3D objects amongst the textures.
+    fillFocal(ctx, cell, undefined, 0.2);
   });
 
   if (bundle && textCell >= 0) {

@@ -6,7 +6,9 @@
  * helpers centralize the boring parts (background, text styles, the design's
  * text bundle) so each algorithm can focus on layout.
  */
+import {parseColor} from '../color/colorSpaces.js';
 import {Rng} from '../core/rng.js';
+import {uid} from '../core/renderer.js';
 import {Color, DesignContext, Rect} from '../core/types.js';
 import {TextStyle} from '../typography/fitText.js';
 import {scriptByName} from '../typography/scripts.js';
@@ -29,6 +31,60 @@ export function block(ctx: DesignContext, r: Rect, fill: Color, parent?: SVGElem
 /** True if the design's script is right-to-left. */
 export function isRtl(ctx: DesignContext): boolean {
   return !!scriptByName(ctx.text.script).rtl;
+}
+
+/**
+ * A filter that desaturates its input and re-tints it toward `color` (with a
+ * brightness bias), so a backdrop reads as a single muted, scheme-appropriate
+ * wash instead of its generator's own (possibly clashing) colors.
+ */
+function tintFilterId(ctx: DesignContext, color: Color): string {
+  const rgb = parseColor(color) ?? {r: 128, g: 128, b: 128};
+  const r = rgb.r / 255;
+  const g = rgb.g / 255;
+  const b = rgb.b / 255;
+  const k = 0.2; // grayscale weight (0.6 * 1/3) so white -> full tint
+  const o = 0.4; // brightness bias so shadows still carry the hue
+  const ch = (c: number) => `${(k * c).toFixed(4)} ${(k * c).toFixed(4)} ${(k * c).toFixed(4)} 0 ${(o * c).toFixed(4)}`;
+  const values = `${ch(r)} ${ch(g)} ${ch(b)} 0 0 0 1 0`;
+  const id = uid('tint');
+  const filter = ctx.el('filter', {id, 'color-interpolation-filters': 'sRGB'});
+  filter.appendChild(ctx.el('feColorMatrix', {type: 'matrix', values}));
+  const defs = ctx.el('defs');
+  defs.appendChild(filter);
+  ctx.root.appendChild(defs);
+  return id;
+}
+
+/**
+ * With probability `chance`, lays a MUTED full-canvas generator behind the
+ * content -- a faint "backdrop image" that fills plain compositions without
+ * fighting the foreground. It's kept at very low opacity AND colorized toward a
+ * palette hue, so it never competes with the content or clashes with the scheme.
+ * Call right after fillBackground(). Returns whether a backdrop was drawn.
+ */
+export function backdrop(ctx: DesignContext, chance = 0.45): boolean {
+  if (!ctx.rng.chance(chance)) return false;
+  const g = ctx.fillRegion(ctx.bounds());
+  g.setAttribute('opacity', ctx.rng.range(0.08, 0.16).toFixed(3));
+  const tint = ctx.rng.chance(0.6) ? ctx.palette.primary : ctx.palette.accent;
+  g.setAttribute('filter', `url(#${tintFilterId(ctx, tint)})`);
+  return true;
+}
+
+/**
+ * Fills a focal region with a generator, biased toward a 3D "object" so a
+ * composition gets an occasional rendered object slot. `objectChance` controls
+ * how often the object category is used vs. any generator.
+ */
+export function fillFocal(
+  ctx: DesignContext,
+  r: Rect,
+  parent?: SVGElement,
+  objectChance = 0.5,
+): SVGElement {
+  const category = ctx.rng.chance(objectChance) ? 'object' : undefined;
+  return ctx.fillRegion(r, parent, undefined, category);
 }
 
 /** Builds a text style from the design's font at a given size/weight. */
