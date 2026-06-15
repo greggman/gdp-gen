@@ -18,6 +18,16 @@ import './blobConfetti.js';
 import './blueprintGrid.js';
 import './brickWall.js';
 import './bubbles.js';
+// 3D object generators (perspective-rendered faceted solids)
+import './blockTowers.js';
+import './blockCity.js';
+import './cone3d.js';
+import './coneField.js';
+import './cubeField.js';
+import './cylinder3d.js';
+import './cylinderCluster.js';
+import './posterSphere.js';
+import './sphereField.js';
 import './cellNoise.js';
 import './charRain.js';
 import './checkerFloorPersp.js';

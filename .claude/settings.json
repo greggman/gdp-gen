@@ -20,7 +20,11 @@
       "Bash(echo \"EXIT:$?\")",
       "Bash(node build.mjs)",
       "Bash(awk '{n=$0; sub\\(/\\\\.ts$/,\"\",n\\); print \"import '\\\\''./\" n \".js'\\\\'';\"}')",
-      "Bash(node ./_pt.mjs)"
+      "Bash(node ./_pt.mjs)",
+      "Bash(npm run *)",
+      "Bash(node -e ' *)",
+      "Read(//tmp/**)",
+      "Read(//private/tmp/**)"
     ]
   }
 }
