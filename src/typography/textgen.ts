@@ -6,10 +6,18 @@
 import {Rng} from '../core/rng.js';
 import {CharClass, Script, scriptByName, WordPattern} from './scripts.js';
 
-/** A single random glyph from a character class (explicit pool or ranges). */
-function glyphFrom(rng: Rng, cls: CharClass): string {
+/**
+ * A single random glyph from a character class (explicit pool or ranges). When
+ * `leading`, characters in `cls.noLeading` are excluded (so a run never begins
+ * with a small kana, the long-vowel mark, etc.).
+ */
+function glyphFrom(rng: Rng, cls: CharClass, leading = false): string {
   if (cls.chars) {
-    const pool = Array.from(cls.chars);
+    let pool = Array.from(cls.chars);
+    if (leading && cls.noLeading) {
+      const bad = new Set(Array.from(cls.noLeading));
+      pool = pool.filter(c => !bad.has(c));
+    }
     return pool[rng.int(0, pool.length - 1)];
   }
   const [lo, hi] = rng.pick(cls.ranges);
@@ -45,10 +53,14 @@ export function makeWord(rng: Rng, script: Script): string {
     script.wordPatterns.map(p => p.weight ?? 1),
   );
   let out = '';
+  let first = true; // the first glyph of the whole word can't be a noLeading char
   for (const seg of pattern.segments) {
     const cls = classByName(script, seg.cls);
     const len = rng.int(seg.len[0], seg.len[1]);
-    for (let i = 0; i < len; i++) out += glyphFrom(rng, cls);
+    for (let i = 0; i < len; i++) {
+      out += glyphFrom(rng, cls, first);
+      first = false;
+    }
   }
   return out;
 }

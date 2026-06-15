@@ -17,6 +17,7 @@
  *     vs Traditional Chinese stay separate.
  */
 import {CHINESE_SIMPLIFIED, CHINESE_TRADITIONAL, JAPANESE_KANJI} from './cjk.js';
+import {HIRAGANA, HIRAGANA_NOLEAD, KATAKANA, KATAKANA_NOLEAD} from './kana.js';
 
 /** A named set of glyphs to sample from: codepoint ranges or an explicit pool. */
 export interface CharClass {
@@ -29,6 +30,12 @@ export interface CharClass {
    * mixes languages and Traditional/Simplified forms). Overrides `ranges`.
    */
   chars?: string;
+  /**
+   * Characters from `chars` that may NOT begin a run (e.g. Japanese small kana
+   * and the long-vowel mark, which only ever follow another kana). The first
+   * glyph of a run is drawn from `chars` minus these.
+   */
+  noLeading?: string;
 }
 
 /** One segment of a word: pick `len` glyphs from character class `cls`. */
@@ -131,8 +138,9 @@ export const SCRIPTS: Script[] = [
     weight: 5,
     lang: 'ja',
     classes: [
-      {name: 'hira', ranges: [[0x3041, 0x3096]]},
-      {name: 'kata', ranges: [[0x30a1, 0x30fa]]},
+      // Curated modern kana (no obsolete chars); small kana can't lead a run.
+      {name: 'hira', ranges: [], chars: HIRAGANA, noLeading: HIRAGANA_NOLEAD},
+      {name: 'kata', ranges: [], chars: KATAKANA, noLeading: KATAKANA_NOLEAD},
       // Curated Japanese kanji only -- never the raw CJK block.
       {name: 'kanji', ranges: [], chars: JAPANESE_KANJI},
     ],
