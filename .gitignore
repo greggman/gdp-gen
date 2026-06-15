@@ -5,3 +5,7 @@ node_modules/
 .vscode/
 /TODO.md
 /PLAN.md
+/gallery.js
+/gallery.js.map
+/main.js
+/main.js.map
