@@ -28,6 +28,29 @@ body {
     display: block;
     width: 100%;
     height: 100%;
+    /* Clip layers that slide/scale in from beyond the canvas edge. */
+    overflow: hidden;
+  }
+}
+
+/* The design assembles by sliding + scaling + fading its layers in, staggered
+   (see main.ts). Each layer's start offset/scale is set per-element via --t0;
+   the background layer is left untouched so there's never a gap behind. */
+@keyframes design-in {
+  from {
+    opacity: 0;
+    transform: var(--t0, scale(0.88));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Honour reduced-motion: no staggered reveal. */
+  #stage svg > * {
+    animation: none !important;
   }
 }
 

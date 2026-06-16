@@ -24,7 +24,9 @@
       "Bash(npm run *)",
       "Bash(node -e ' *)",
       "Read(//tmp/**)",
-      "Read(//private/tmp/**)"
+      "Read(//private/tmp/**)",
+      "Bash(cd /Users/gregg/src/design-new-tab-page/ *)",
+      "Read(//Users/gregg/src/design-new-tab-page/**)"
     ]
   }
 }
