@@ -7,7 +7,7 @@
  */
 import {registerComposition} from '../core/registry.js';
 import {Color, DesignContext, Rect} from '../core/types.js';
-import {drawHeadline} from '../typography/fitText.js';
+import {drawHeadlineFit} from '../typography/fitText.js';
 import {
   block,
   displaySize,
@@ -79,42 +79,31 @@ function render(ctx: DesignContext): void {
   // Giant headline printed twice: a shifted ghost in inkB, then the solid inkA
   // pass on top. Both bleed across the canvas overlapping the texture, each on a
   // backing band for guaranteed contrast.
-  const headStyle = textStyle(ctx, displaySize(ctx, rng.range(0.18, 0.26)), heavyWeight(ctx));
-  const headRect: Rect = {x: m, y: H * rng.range(0.34, 0.5), w: W - m * 2, h: H * 0.2};
+  const headStyle = textStyle(ctx, H * 0.3, heavyWeight(ctx));
+  // A generous box centered in the lower-middle; fit-to-box wraps the headline to
+  // fill it (so a long headline stays big and readable even in narrow portrait)
+  // while still bleeding past the canvas edges via the box's negative inset.
+  const headRect: Rect = {x: -W * 0.04, y: H * rng.range(0.3, 0.4), w: W * 1.08, h: H * 0.36};
 
   const ghost = ctx.group();
   ghost.setAttribute('transform', `translate(${(off * dir.x * 1.6).toFixed(2)} ${(off * dir.y * 1.6).toFixed(2)})`);
   ghost.setAttribute('opacity', '0.7');
-  drawHeadline(ctx, headRect, bundle.headline, headStyle, {
-    mode: 'bleed',
-    backing: true,
-    bg: inkB,
-    align,
-    parent: ghost,
-  });
-
-  drawHeadline(ctx, headRect, bundle.headline, headStyle, {
-    mode: 'bleed',
-    backing: true,
-    bg: inkA,
-    align,
-  });
+  drawHeadlineFit(ctx, headRect, bundle.headline, headStyle, {backing: true, bg: inkB, align, parent: ghost});
+  drawHeadlineFit(ctx, headRect, bundle.headline, headStyle, {backing: true, bg: inkA, align});
 
   // A small misregistered label block anchors the page, also double-printed.
-  const labelH = displaySize(ctx, 0.07);
-  const labelRect: Rect = {x: m, y: H - labelH - m, w: W * 0.5, h: labelH};
+  const labelH = displaySize(ctx, 0.08);
+  const labelRect: Rect = {x: m, y: H - labelH - m, w: W * 0.55, h: labelH};
   const lghost = ctx.group();
   lghost.setAttribute('transform', `translate(${(off * dir.x).toFixed(2)} ${(off * dir.y).toFixed(2)})`);
   lghost.setAttribute('opacity', '0.65');
-  drawHeadline(ctx, labelRect, `${bundle.sub} · ${bundle.label}`, textStyle(ctx, labelH * 0.6, heavyWeight(ctx)), {
-    mode: 'bleed',
+  drawHeadlineFit(ctx, labelRect, `${bundle.sub} · ${bundle.label}`, textStyle(ctx, labelH, heavyWeight(ctx)), {
     backing: true,
     bg: inkB,
     align: rtl ? 'end' : 'start',
     parent: lghost,
   });
-  drawHeadline(ctx, labelRect, `${bundle.sub} · ${bundle.label}`, textStyle(ctx, labelH * 0.6, heavyWeight(ctx)), {
-    mode: 'bleed',
+  drawHeadlineFit(ctx, labelRect, `${bundle.sub} · ${bundle.label}`, textStyle(ctx, labelH, heavyWeight(ctx)), {
     backing: true,
     bg: inkA,
     align: rtl ? 'end' : 'start',

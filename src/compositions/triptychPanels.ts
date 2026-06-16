@@ -8,12 +8,13 @@
  */
 import {registerComposition} from '../core/registry.js';
 import {Color, DesignContext, Rect} from '../core/types.js';
-import {drawHeadline, drawLine} from '../typography/fitText.js';
+import {drawHeadline, drawHeadlineFit, drawLine, fitSizeToWidth} from '../typography/fitText.js';
 import {
   block,
   displaySize,
   fillBackground,
   heavyWeight,
+  isPortrait,
   isRtl,
   margin,
   textBundle,
@@ -88,14 +89,14 @@ function render(ctx: DesignContext): void {
       g.setAttribute('transform', `rotate(-90 ${cx} ${cy})`);
     }
     const longSide = tall ? H : W;
-    drawHeadline(
+    drawHeadlineFit(
       ctx,
       tall
-        ? {x: (W - H) / 2 + m, y: (H - W) / 2 + H / 2 - W * 0.08, w: H - m * 2, h: W * 0.16}
-        : {x: m, y: H * 0.5 - H * 0.11, w: W - m * 2, h: H * 0.22},
+        ? {x: (W - H) / 2 + m, y: (H - W) / 2 + H / 2 - W * 0.16, w: H - m * 2, h: W * 0.32}
+        : {x: m, y: H * 0.5 - H * 0.15, w: W - m * 2, h: H * 0.3},
       bundle.headline,
-      textStyle(ctx, longSide * rng.range(0.16, 0.22), weight),
-      {mode: 'bleed', backing: true, bg: palette.background, align: rtl ? 'end' : 'middle', parent: g},
+      textStyle(ctx, longSide * 0.3, weight),
+      {backing: true, bg: palette.background, align: rtl ? 'end' : 'middle', parent: g},
     );
     // Small supporting label pinned to the bottom of the wide texture panel.
     const tp = panels[texIdx];
@@ -111,22 +112,51 @@ function render(ctx: DesignContext): void {
     return;
   }
 
-  // MODE B: one giant stacked word per panel, each reversed out of its field.
+  // MODE B: one giant word per panel, each reversed out of its field. In portrait
+  // the panels are thin and tall, so the word is set VERTICALLY (rotated up the
+  // panel) filling the panel's long axis -- horizontal text would shrink to an
+  // illegible size in such a narrow column. In landscape it stays horizontal.
   const words = bundle.headline.split(/\s+/).filter(Boolean);
   const fills: string[] = [bundle.sub, bundle.headline, bundle.label];
+  const portrait = isPortrait(ctx);
   panels.forEach((p, i) => {
     const onTexture = i === texIdx;
     const fieldColor = onTexture ? palette.background : flat[(i < texIdx ? i : i - 1) % flat.length];
-    // On the texture panel, lay a solid backing strip so the word reads.
     const word = words[i] ?? fills[i] ?? bundle.label;
+
+    if (portrait) {
+      // Vertical word running up the tall panel, sized to fill the panel height.
+      const cx = p.x + p.w / 2;
+      const cy = p.y + p.h / 2;
+      const probe = textStyle(ctx, p.w, weight);
+      // When rotated, the text's advance runs along the panel HEIGHT and its cap
+      // height runs along the panel WIDTH.
+      const size = Math.min(p.w * 0.82, fitSizeToWidth(word, p.h * 0.86, probe, 8));
+      const style = textStyle(ctx, size, weight);
+      // Backing band: a vertical strip down the panel centre so the word reads.
+      const bandW = size * 1.32;
+      block(ctx, {x: cx - bandW / 2, y: p.y + p.h * 0.04, w: bandW, h: p.h * 0.92}, fieldColor);
+      const g = ctx.group();
+      g.setAttribute('transform', `rotate(-90 ${cx} ${cy})`);
+      drawLine(ctx, cx, cy + size * 0.34, word, style, {
+        bg: fieldColor,
+        fill: palette.primary,
+        anchor: 'middle',
+        minContrast: 3,
+        parent: g,
+      });
+      return;
+    }
+
+    // Landscape: a horizontal word on a backing strip.
     const stripH = H * rng.range(0.22, 0.34);
     const stripY = H * rng.range(0.1, 0.55);
     block(ctx, {x: p.x, y: stripY, w: p.w, h: stripH}, fieldColor);
-    drawHeadline(
+    drawHeadlineFit(
       ctx,
       {x: p.x + m * 0.5, y: stripY, w: p.w - m, h: stripH},
       word,
-      textStyle(ctx, displaySize(ctx, 0.13), weight),
+      textStyle(ctx, stripH, weight),
       {bg: fieldColor, fill: palette.primary, align: 'middle'},
     );
   });

@@ -8,7 +8,7 @@
 import {registerComposition} from '../core/registry.js';
 import {DesignContext, Rect} from '../core/types.js';
 import {columns, inset, splitY} from '../layout/geometry.js';
-import {drawHeadline, drawLine, drawParagraph} from '../typography/fitText.js';
+import {drawHeadline, drawHeadlineFit, drawLine, drawParagraph} from '../typography/fitText.js';
 import {
   block,
   displaySize,
@@ -42,12 +42,15 @@ function render(ctx: DesignContext): void {
   // --- Masthead band: enormous nameplate bleeding to both edges. ---
   const headH = ctx.height * rng.range(0.24, 0.32);
   block(ctx, {x: 0, y: 0, w: ctx.width, h: headH}, bandColor);
-  drawHeadline(
+  // Nameplate fills the band -- wraps to fill instead of bleeding off (and being
+  // clipped to a few letters) when the canvas is narrow.
+  const npm = ctx.width * 0.04;
+  drawHeadlineFit(
     ctx,
-    {x: 0, y: headH * 0.5 - headH * 0.18, w: ctx.width, h: headH * 0.64},
+    {x: npm, y: headH * 0.08, w: ctx.width - npm * 2, h: headH * 0.78},
     bundle.headline,
-    textStyle(ctx, headH * 0.9, heavy),
-    {mode: 'bleed', backing: false, bg: bandColor, fill: palette.background, align: 'middle'},
+    textStyle(ctx, headH, heavy),
+    {bg: bandColor, fill: palette.background, align: 'middle'},
   );
 
   // Thin metadata strip under the nameplate (edition / label / sub), in caps.

@@ -7,7 +7,7 @@
  */
 import {registerComposition} from '../core/registry.js';
 import {Color, DesignContext, Rect} from '../core/types.js';
-import {drawHeadline} from '../typography/fitText.js';
+import {drawHeadline, drawHeadlineFit} from '../typography/fitText.js';
 import {measureWidth} from '../typography/fitText.js';
 import {
   block,
@@ -72,15 +72,17 @@ function render(ctx: DesignContext): void {
     y += h;
 
     if (isHero) {
-      // Giant headline bleeding off both edges on a bold color field.
+      // Giant headline filling the hero band on a bold color field. Fit-to-box so
+      // it wraps to fill the band instead of bleeding off (and vanishing) when the
+      // canvas is narrow.
       const heroBg: Color = rng.chance(0.5) ? palette.primary : palette.accent;
       block(ctx, band, heroBg);
-      drawHeadline(
+      drawHeadlineFit(
         ctx,
-        {x: ctx.width * 0.03, y: band.y, w: ctx.width * 0.94, h: band.h},
+        {x: ctx.width * 0.03, y: band.y + band.h * 0.06, w: ctx.width * 0.94, h: band.h * 0.88},
         bundle.headline,
-        textStyle(ctx, band.h * rng.range(0.78, 0.98), weight),
-        {mode: 'bleed', bg: heroBg, fill: palette.background, align: rng.pick(['start', 'middle', 'end'] as const)},
+        textStyle(ctx, band.h, weight),
+        {bg: heroBg, fill: palette.background, align: rng.pick(['start', 'middle', 'end'] as const)},
       );
       continue;
     }

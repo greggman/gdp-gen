@@ -7,7 +7,7 @@
 import {registerComposition} from '../core/registry.js';
 import {Color, DesignContext, Rect} from '../core/types.js';
 import {columns, rows} from '../layout/geometry.js';
-import {drawHeadline, drawLine, drawParagraph} from '../typography/fitText.js';
+import {drawHeadline, drawHeadlineFit, drawLine, drawParagraph} from '../typography/fitText.js';
 import {
   block,
   displaySize,
@@ -100,16 +100,15 @@ function render(ctx: DesignContext): void {
     minContrast: 1.5,
   });
 
-  // --- Huge headline filling the text zone, bleeding to the edges.
-  const headStyle = textStyle(ctx, displaySize(ctx, rng.range(0.18, 0.26)), weight);
-  drawHeadline(
+  // --- Huge headline filling the text zone. Fit-to-box so it wraps to fill the
+  // zone (staying big and readable) rather than bleeding off a narrow canvas.
+  const headStyle = textStyle(ctx, textH, weight);
+  drawHeadlineFit(
     ctx,
     {x: content.x, y: textY, w: content.w, h: textH * 0.66},
     bundle.headline,
     headStyle,
     {
-      mode: 'bleed',
-      backing: true,
       bg: palette.background,
       fill: palette.primary,
       align: anchor,

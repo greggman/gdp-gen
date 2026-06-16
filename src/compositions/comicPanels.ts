@@ -8,10 +8,9 @@
 import {registerComposition} from '../core/registry.js';
 import {Color, DesignContext, Rect} from '../core/types.js';
 import {inset, splitX, splitY} from '../layout/geometry.js';
-import {drawHeadline} from '../typography/fitText.js';
+import {drawHeadlineFit} from '../typography/fitText.js';
 import {
   block,
-  displaySize,
   fillBackground,
   heavyWeight,
   isRtl,
@@ -80,12 +79,14 @@ function render(ctx: DesignContext): void {
       ctx.root.appendChild(defs);
       const clipped = ctx.group();
       clipped.setAttribute('clip-path', `url(#${clipId})`);
-      drawHeadline(
+      // Splash headline fills the panel (wraps as needed) so it reads at any panel
+      // shape instead of bleeding out of a narrow panel.
+      drawHeadlineFit(
         ctx,
         inset(p, pad),
         bundle.headline,
-        textStyle(ctx, displaySize(ctx, rng.range(0.14, 0.22)), weight),
-        {mode: 'bleed', backing: false, bg: fieldColor, fill: palette.background, align, parent: clipped},
+        textStyle(ctx, Math.min(p.w, p.h), weight),
+        {bg: fieldColor, fill: palette.background, align, parent: clipped},
       );
       return;
     }
@@ -93,11 +94,11 @@ function render(ctx: DesignContext): void {
       const fieldColor: Color = palette.background;
       block(ctx, p, fieldColor);
       const pad = Math.min(p.w, p.h) * 0.1;
-      drawHeadline(
+      drawHeadlineFit(
         ctx,
         inset(p, pad),
         rng.chance(0.5) ? bundle.sub : bundle.label,
-        textStyle(ctx, displaySize(ctx, rng.range(0.05, 0.08)), weight),
+        textStyle(ctx, Math.min(p.w, p.h), weight),
         {bg: fieldColor, fill: palette.primary, minContrast: 4.5, align},
       );
       return;

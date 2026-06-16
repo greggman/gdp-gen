@@ -6,7 +6,7 @@
  */
 import {registerComposition} from '../core/registry.js';
 import {Color, DesignContext} from '../core/types.js';
-import {drawHeadline, drawLine} from '../typography/fitText.js';
+import {drawHeadlineFit, drawLine} from '../typography/fitText.js';
 import {
   displaySize,
   fillBackground,
@@ -107,14 +107,17 @@ function render(ctx: DesignContext): void {
   // Colossal headline bleeds across the canvas, overlapping the tower, backed by
   // a solid band so it cuts cleanly through both texture and flat planes.
   const bandColor: Color = rng.chance(0.5) ? palette.accent : sideFill;
-  const headSize = displaySize(ctx, rng.range(0.18, 0.28));
-  const headY = fromLeft ? H * rng.range(0.1, 0.24) : H * rng.range(0.62, 0.8);
-  drawHeadline(
+  // A generous box on a backing band; fit-to-box wraps the headline to fill it so
+  // it stays huge AND readable in any aspect. The box is wider than the canvas so
+  // the type still bleeds to the edges.
+  const headBandH = H * rng.range(0.3, 0.42);
+  const headY = fromLeft ? H * rng.range(0.06, 0.16) : H - headBandH - H * rng.range(0.06, 0.16);
+  drawHeadlineFit(
     ctx,
-    {x: -W * 0.05, y: headY, w: W * 1.1, h: headSize * 1.3},
+    {x: -W * 0.05, y: headY, w: W * 1.1, h: headBandH},
     bundle.headline,
-    textStyle(ctx, headSize, heavyWeight(ctx)),
-    {mode: 'bleed', backing: true, bg: bandColor, align: rtl ? 'end' : 'start'},
+    textStyle(ctx, H * 0.32, heavyWeight(ctx)),
+    {backing: true, bg: bandColor, align: rtl ? 'end' : 'start'},
   );
 
   // Vertical edition label stamped up the empty flank -- active negative space.

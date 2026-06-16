@@ -198,6 +198,94 @@ export function drawHeadline(
   return g;
 }
 
+/**
+ * Picks the largest font-size at which `text`, wrapped to `rect.w`, fits inside
+ * `rect` (both width and height). As the size grows the text wraps onto more
+ * lines, so the wrapped block's height grows monotonically -- a binary search
+ * finds the size that just fills the box. This is what makes a headline stay big
+ * and readable in any aspect ratio: in a narrow portrait box it wraps to several
+ * large lines instead of shrinking to one tiny line that fits the width.
+ */
+export function fitHeadlineToBox(
+  text: string,
+  rect: Rect,
+  style: TextStyle,
+  lineHeight: number,
+  min = 10,
+): {size: number; lines: string[]} {
+  let lo = min;
+  let hi = Math.max(min, rect.h);
+  for (let i = 0; i < 16; i++) {
+    const mid = (lo + hi) / 2;
+    const probe: TextStyle = {...style, size: mid};
+    const lines = wrapText(text, rect.w, probe);
+    const blockH = lines.length * mid * lineHeight;
+    // wrapText keeps multi-token lines within width; a single unbreakable token
+    // (a long latin word, no spaces) can still overflow, so check the widest.
+    const widest = Math.max(...lines.map(l => measureWidth(l, probe)));
+    if (blockH <= rect.h && widest <= rect.w) lo = mid;
+    else hi = mid;
+  }
+  const size = lo;
+  return {size, lines: wrapText(text, rect.w, {...style, size})};
+}
+
+/**
+ * Draws a headline that fills `rect`: the text wraps and is sized so the wrapped
+ * block is as large as possible while fitting the box, then centered vertically.
+ * Unlike drawHeadline's single-line 'shrink', this keeps type big in narrow
+ * (portrait) boxes by wrapping to multiple lines. Each line is contrast-corrected
+ * against `bg`.
+ */
+export function drawHeadlineFit(
+  ctx: DesignContext,
+  rect: Rect,
+  text: string,
+  style: TextStyle,
+  opts: HeadlineOptions & {lineHeight?: number} = {},
+): SVGGElement {
+  const g = ctx.group(opts.parent);
+  const lh = opts.lineHeight ?? 1.04;
+  const {size, lines} = fitHeadlineToBox(text, rect, style, lh);
+  const drawStyle: TextStyle = {...style, size};
+  const align = opts.align ?? (style.rtl ? 'end' : 'start');
+  const x = align === 'middle' ? rect.x + rect.w / 2 : align === 'end' ? rect.x + rect.w : rect.x;
+
+  const blockH = lines.length * size * lh;
+  // First baseline: top of the centered block + the cap height (~0.78*size).
+  const blockTop = rect.y + (rect.h - blockH) / 2;
+  let y = blockTop + size * 0.78;
+
+  // Optional backing band behind the whole wrapped block so it stays readable
+  // over a busy texture (the fill is contrast-corrected against `bg`, but only a
+  // solid backing guarantees it over an arbitrary generator).
+  if (opts.backing && opts.bg) {
+    const widest = Math.max(...lines.map(l => measureWidth(l, drawStyle)));
+    const pad = size * 0.16;
+    const left = align === 'middle' ? x - widest / 2 : align === 'end' ? x - widest : x;
+    g.appendChild(
+      ctx.el('rect', {
+        x: left - pad,
+        y: blockTop - pad,
+        width: widest + pad * 2,
+        height: blockH + pad * 2,
+        fill: opts.bg,
+      }),
+    );
+  }
+
+  for (const line of lines) {
+    drawLine(ctx, x, y, line, drawStyle, {
+      ...opts,
+      anchor: align,
+      minContrast: opts.minContrast ?? AA_LARGE,
+      parent: g,
+    });
+    y += size * lh;
+  }
+  return g;
+}
+
 /** Draws wrapped body text inside `rect`, top-aligned, clipped to the rect. */
 export function drawParagraph(
   ctx: DesignContext,

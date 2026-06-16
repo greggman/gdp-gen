@@ -8,7 +8,7 @@
 import {registerComposition} from '../core/registry.js';
 import {Color, DesignContext, Rect} from '../core/types.js';
 import {GOLDEN, splitX, splitY} from '../layout/geometry.js';
-import {drawHeadline, drawLine, fitSizeToWidth, measureWidth} from '../typography/fitText.js';
+import {drawHeadline, drawHeadlineFit, drawLine, measureWidth} from '../typography/fitText.js';
 import {
   backdrop,
   block,
@@ -81,33 +81,21 @@ function render(ctx: DesignContext): void {
     };
     ctx.fillRegion(fieldRect);
 
-    // Stack the headline words as huge lines that overshoot the width and bleed
-    // off the open edge. Each line gets a backing band for guaranteed contrast
-    // where it crosses the generator field.
-    const words = bundle.headline.split(/\s+/).filter(Boolean);
-    const lines = words.length >= 2 ? words : [bundle.headline];
-    const lineH = (ctx.height - m * 2) / (lines.length + 0.3);
-    // Flush the type toward the OPEN side (away from the generator field) so it
-    // bleeds into the whitespace; align consistently for a strong vertical edge.
+    // Colossal headline filling the open band beside the field. Fit-to-box keeps
+    // it huge AND readable in any aspect (it wraps in narrow portrait rather than
+    // shrinking to a tiny single line). Flush toward the OPEN side.
     const flushRight = !fieldOnRight;
     const align = flushRight ? 'end' : 'start';
-
-    lines.forEach((line, i) => {
-      const probe = textStyle(ctx, ctx.height, weight);
-      const target = ctx.width * rng.range(1.05, 1.28);
-      const size = Math.min(lineH * 1.18, fitSizeToWidth(line, target, probe, 8));
-      const style = textStyle(ctx, size, weight);
-      const y = m + lineH * (i + 0.85);
-      const rect: Rect = {x: m, y: y - lineH, w: ctx.width - m * 2, h: lineH};
-      drawHeadline(ctx, rect, line, style, {
-        mode: 'bleed',
-        backing: true,
-        bg,
-        fill: palette.primary,
-        align,
-        minContrast: 3,
-      });
-    });
+    // The headline owns the canvas minus the generator field column.
+    const headX = fieldOnRight ? m : fieldW + m;
+    const headW = ctx.width - fieldW - m * 2;
+    drawHeadlineFit(
+      ctx,
+      {x: headX, y: m, w: headW, h: ctx.height - m * 2 - ctx.height * 0.08},
+      bundle.headline,
+      textStyle(ctx, ctx.height, weight),
+      {bg, fill: palette.primary, align, minContrast: 3},
+    );
 
     // Thick accent bar bleeding across, off-center, top third.
     const barY = ctx.height * rng.range(0.06, 0.16);
@@ -166,23 +154,15 @@ function render(ctx: DesignContext): void {
   // a label. Generous whitespace within the column keeps it airy but confident.
   const tf: Rect = {x: small.x + m, y: m, w: small.w - m * 2, h: ctx.height - m * 2};
   const align = rtl ? 'end' : 'start';
-  const headWords = bundle.headline.split(/\s+/).filter(Boolean);
-  const headLines = headWords.length >= 2 ? headWords : [bundle.headline];
-  const hLineH = (tf.h * 0.7) / (headLines.length + 0.3);
-  headLines.forEach((line, i) => {
-    const size = Math.min(
-      hLineH * 1.1,
-      fitSizeToWidth(line, tf.w, textStyle(ctx, ctx.height, weight), 8),
-    );
-    const style = textStyle(ctx, size, weight);
-    const rect: Rect = {x: tf.x, y: tf.y + hLineH * i, w: tf.w, h: hLineH};
-    drawHeadline(ctx, rect, line, style, {
-      bg,
-      fill: palette.primary,
-      align,
-      mode: 'shrink',
-    });
-  });
+  // Tall headline filling the upper ~70% of the narrow text column; fit-to-box
+  // wraps it to fill the column instead of shrinking to fit its narrow width.
+  drawHeadlineFit(
+    ctx,
+    {x: tf.x, y: tf.y, w: tf.w, h: tf.h * 0.7},
+    bundle.headline,
+    textStyle(ctx, ctx.height, weight),
+    {bg, fill: palette.primary, align},
+  );
 
   // Sub + label anchored to the bottom of the text column.
   const labelStyle = textStyle(ctx, displaySize(ctx, 0.026), weight);

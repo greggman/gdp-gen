@@ -33,6 +33,16 @@ export function isRtl(ctx: DesignContext): boolean {
   return !!scriptByName(ctx.text.script).rtl;
 }
 
+/** True when the canvas is taller than it is wide (e.g. a phone screen). */
+export function isPortrait(ctx: DesignContext): boolean {
+  return ctx.height > ctx.width * 1.05;
+}
+
+/** Aspect ratio (width / height). <1 is portrait, >1 is landscape. */
+export function aspect(ctx: DesignContext): number {
+  return ctx.width / ctx.height;
+}
+
 /**
  * A filter that desaturates its input and re-tints it toward `color` (with a
  * brightness bias), so a backdrop reads as a single muted, scheme-appropriate

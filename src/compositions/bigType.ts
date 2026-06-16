@@ -5,7 +5,7 @@
  */
 import {registerComposition} from '../core/registry.js';
 import {DesignContext} from '../core/types.js';
-import {drawLine, fitSizeToWidth, measureWidth} from '../typography/fitText.js';
+import {drawHeadlineFit, drawLine} from '../typography/fitText.js';
 import {
   backdrop,
   displaySize,
@@ -46,26 +46,22 @@ function render(ctx: DesignContext): void {
   // Optional muted backdrop texture so the field behind the type isn't flat.
   backdrop(ctx, 0.5);
 
-  // Stack the headline words as huge lines, each overflowing the width.
-  const words = bundle.headline.split(/\s+/).filter(Boolean);
-  const lines = words.length >= 2 ? words : [bundle.headline];
+  // Set the headline so it FILLS the canvas: it wraps to as many huge lines as
+  // needed and is sized to fill the box. This keeps type enormous and readable in
+  // any aspect -- in a narrow portrait it stacks the words into big lines instead
+  // of shrinking to fit the width (which would leave it tiny).
   const m = margin(ctx, 0.04);
-  const lineH = ctx.height / (lines.length + 0.4);
   const weight = heavyWeight(ctx);
   const fill = bgIsColor ? palette.background : palette.primary;
-
-  lines.forEach((line, i) => {
-    // Size so the word slightly overshoots the width -> intentional bleed.
-    const probe = textStyle(ctx, ctx.height, weight);
-    const target = ctx.width * rng.range(1.02, 1.25);
-    const size = Math.min(lineH * 1.15, fitSizeToWidth(line, target, probe, 8));
-    const style = textStyle(ctx, size, weight);
-    const w = measureWidth(line, style);
-    const x = rng.chance(0.5) ? m : ctx.width - m - w; // flush left or right
-    const y = lineH * (i + 1);
-    // x is the left edge of the line, so anchor at 'start' regardless of script.
-    drawLine(ctx, x, y, line, style, {bg, fill, minContrast: 3, anchor: 'start'});
-  });
+  const align = rng.pick(['start', 'middle', 'end'] as const); // flush left / centered / right
+  const bottomReserve = ctx.height * 0.08; // room for the corner label below
+  drawHeadlineFit(
+    ctx,
+    {x: m, y: m, w: ctx.width - m * 2, h: ctx.height - m * 2 - bottomReserve},
+    bundle.headline,
+    textStyle(ctx, ctx.height, weight),
+    {bg, fill, minContrast: 3, align},
+  );
 
   // Small label, corner-anchored bottom-left.
   drawLine(

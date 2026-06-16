@@ -7,7 +7,7 @@
  */
 import {registerComposition} from '../core/registry.js';
 import {Color, DesignContext, Rect} from '../core/types.js';
-import {GOLDEN, inset, splitX} from '../layout/geometry.js';
+import {GOLDEN, inset, splitX, splitY} from '../layout/geometry.js';
 import {makePhrase} from '../typography/textgen.js';
 import {scriptByName} from '../typography/scripts.js';
 import {drawHeadline, drawLine, fitSizeToWidth, measureWidth} from '../typography/fitText.js';
@@ -16,6 +16,7 @@ import {
   displaySize,
   fillBackground,
   heavyWeight,
+  isPortrait,
   isRtl,
   margin,
   regionFill,
@@ -28,13 +29,25 @@ function render(ctx: DesignContext): void {
   fillBackground(ctx);
 
   const rtl = isRtl(ctx);
-  // The cover-art side takes the larger golden share; list takes the rest.
-  // Put the art on the leading edge half the time for variety.
-  const artFirst = rtl ? rng.chance(0.3) : rng.chance(0.6);
+  // The cover-art side takes the larger golden share; list takes the rest. In
+  // portrait we split TOP/BOTTOM (not side-by-side) so the track list spans the
+  // full width and the titles have room to read -- a narrow side column would
+  // squeeze them illegibly. In landscape we keep the classic side-by-side split.
   const full: Rect = {x: 0, y: 0, w: ctx.width, h: ctx.height};
-  const [first, second] = splitX(full, 1 / GOLDEN);
-  const artSide = artFirst ? first : second;
-  const listSide = artFirst ? second : first;
+  let artSide: Rect;
+  let listSide: Rect;
+  if (isPortrait(ctx)) {
+    const artTop = rng.chance(0.6);
+    const [top, bottom] = splitY(full, 1 / GOLDEN);
+    artSide = artTop ? top : bottom;
+    listSide = artTop ? bottom : top;
+  } else {
+    // Put the art on the leading edge half the time for variety.
+    const artFirst = rtl ? rng.chance(0.3) : rng.chance(0.6);
+    const [first, second] = splitX(full, 1 / GOLDEN);
+    artSide = artFirst ? first : second;
+    listSide = artFirst ? second : first;
+  }
 
   // Full-height generator texture fills the art side -- generator as protagonist.
   ctx.fillRegion(artSide);
