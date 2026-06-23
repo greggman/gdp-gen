@@ -41,12 +41,27 @@ export interface FontChoice {
   widthRatio: number;
 }
 
+/**
+ * Caller-supplied text that overrides the generated made-up text, field by field
+ * (e.g. from query params so you can preview a design with real copy). Any field
+ * left undefined falls back to the generated text.
+ */
+export interface TextOverrides {
+  headline?: string;
+  sub?: string;
+  body?: string[];
+  label?: string;
+  english?: string;
+}
+
 /** Text configuration for a single design. */
 export interface TextSettings {
   enabled: boolean;
   script: string;
   withEnglish: boolean;
   font: FontChoice;
+  /** Explicit text supplied by the caller; overrides the generated text. */
+  overrides?: TextOverrides;
 }
 
 /** A composition algorithm: lays out an entire design. */

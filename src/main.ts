@@ -2,7 +2,7 @@
  * Entry point: wires the refresh button and renders a viewport-sized design on
  * load. The actual design pipeline lives in design.ts.
  */
-import {buildDesign} from './design.js';
+import {buildDesign, parseTextParams} from './design.js';
 import {mount} from './core/renderer.js';
 
 function newSeed(): string {
@@ -104,7 +104,15 @@ function animateIn(svg: SVGSVGElement): void {
 function generate(hash = newSeed()): void {
   location.hash = hash;
   const [seed, composition] = hash.split('~');
-  const svg = buildDesign(seed, window.innerWidth, window.innerHeight, {composition});
+  // Text/script can be pinned via query params (e.g. ?title=My%20Book&byline=...)
+  // so a design can be previewed with specific copy. These persist across the
+  // refresh button (the seed changes; the query string stays).
+  const {text, script} = parseTextParams(new URLSearchParams(location.search));
+  const svg = buildDesign(seed, window.innerWidth, window.innerHeight, {
+    composition,
+    text,
+    script,
+  });
   animateIn(svg);
   const stage = document.getElementById('stage');
   if (stage) mount(stage, svg);

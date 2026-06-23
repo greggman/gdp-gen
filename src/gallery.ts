@@ -5,7 +5,7 @@
  *
  * Query params: ?cols=4&rows=3&w=420&h=300&seed=foo
  */
-import {buildDesign} from './design.js';
+import {buildDesign, parseTextParams} from './design.js';
 import {generatePalette} from './color/palette.js';
 import {Context} from './core/context.js';
 import {makeRng} from './core/rng.js';
@@ -76,6 +76,7 @@ function showcaseGenerators(w: number, h: number): void {
  */
 function showcaseCompositions(w: number, h: number): void {
   const params = new URLSearchParams(location.search);
+  const textOpts = parseTextParams(params);
   const from = param('from', 0);
   const count = param('count', 1000);
   const samples = Math.max(1, param('samples', 1));
@@ -110,6 +111,7 @@ function showcaseCompositions(w: number, h: number): void {
       const svg = buildDesign(seed, w, h, {
         composition: comp.name,
         textEnabled: wantText ? undefined : false,
+        ...textOpts,
       });
       svg.setAttribute('width', String(w));
       svg.setAttribute('height', String(h));
@@ -135,6 +137,7 @@ function showcaseCompositions(w: number, h: number): void {
 
 function init(): void {
   const params = new URLSearchParams(location.search);
+  const textOpts = parseTextParams(params);
   const w = param('w', 420);
   const h = param('h', 300);
   // Clean single-design render for promo screenshots: just the design, filling
@@ -142,7 +145,7 @@ function init(): void {
   const shot = params.get('shot');
   if (shot) {
     document.body.style.margin = '0';
-    const svg = buildDesign(shot, w, h);
+    const svg = buildDesign(shot, w, h, textOpts);
     svg.setAttribute('width', String(w));
     svg.setAttribute('height', String(h));
     svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
@@ -164,7 +167,7 @@ function init(): void {
     const grid = document.createElement('div');
     grid.style.cssText = gridStyle(w);
     for (const seed of exacts.split(',')) {
-      const svg = buildDesign(seed, w, h);
+      const svg = buildDesign(seed, w, h, textOpts);
       svg.setAttribute('width', String(w));
       svg.setAttribute('height', String(h));
       svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
@@ -193,7 +196,7 @@ function init(): void {
 
   for (let i = 0; i < n; i++) {
     const seed = exact ?? `${seedBase}-${i}`;
-    const svg = buildDesign(seed, w, h);
+    const svg = buildDesign(seed, w, h, textOpts);
     svg.setAttribute('width', String(w));
     svg.setAttribute('height', String(h));
     svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');

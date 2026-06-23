@@ -34,6 +34,27 @@ These apply to every mode:
 Because each tile's `viewBox` is `0 0 w h` and its `width`/`height` attributes
 are also `w`/`h`, rendering is 1:1 — no distortion at any size.
 
+### Pinning text / script
+
+Any mode (and the live page, `index.html`) accepts params that replace the
+generated made-up text with specific copy, so you can preview a design with real
+words. Only the fields you pass are overridden; the rest stay generated, and the
+seed's layout/colors are unchanged. Passing any text param forces text on.
+
+| param | aliases | meaning |
+|-------|---------|---------|
+| `title` | `headline` | the main headline |
+| `subtitle` | `byline`, `sub` | the supporting line |
+| `body` | `description`, `desc` | body copy; split on newlines or `\|` into lines |
+| `label` | `edition` | the small label / edition mark |
+| `english` | `en` | the paired English line |
+| `script` | — | force a script by name (e.g. `latin`, `japanese`); also fixes the font |
+
+```
+/debug/gallery.html?comps=1&comp=swiss-grid&samples=6&title=My%20Book&byline=all%20about%20me
+index.html?title=Night%20Market&byline=Vol.%2012&script=latin
+```
+
 Tiles are fixed-size and **wrap to the viewport width** (CSS grid `auto-fill`),
 so there is no `cols` parameter — make the window wider/narrower (or set
 `--window-size` in headless) to change how many columns fit.

@@ -4,6 +4,7 @@
  * bicameral scripts are cased consistently per phrase rather than per glyph.
  */
 import {Rng} from '../core/rng.js';
+import {TextOverrides} from '../core/types.js';
 import {CharClass, Script, scriptByName, WordPattern} from './scripts.js';
 
 /**
@@ -129,7 +130,12 @@ export interface TextBundle {
   english?: string;
 }
 
-export function makeBundle(rng: Rng, scriptName: string, withEnglish: boolean): TextBundle {
+export function makeBundle(
+  rng: Rng,
+  scriptName: string,
+  withEnglish: boolean,
+  overrides?: TextOverrides,
+): TextBundle {
   const script = scriptByName(scriptName);
   const bodyLines = rng.int(2, 5);
   const body: string[] = [];
@@ -137,7 +143,10 @@ export function makeBundle(rng: Rng, scriptName: string, withEnglish: boolean): 
     body.push(makePhrase(rng, script, {words: rng.int(3, 7), casing: 'sentence'}));
   }
   const latin = scriptByName('latin');
-  return {
+  // Generate everything first (so the RNG sequence -- and thus the design's
+  // layout and colors -- is identical whether or not text is overridden), then
+  // swap in any caller-supplied fields.
+  const bundle: TextBundle = {
     headline: makePhrase(rng, script, {words: rng.int(1, 3), casing: displayCasing(rng)}),
     sub: makePhrase(rng, script, {words: rng.int(2, 4), casing: 'title'}),
     body,
@@ -146,4 +155,12 @@ export function makeBundle(rng: Rng, scriptName: string, withEnglish: boolean): 
       ? makePhrase(rng, latin, {words: rng.int(1, 3), casing: displayCasing(rng)})
       : undefined,
   };
+  if (overrides) {
+    if (overrides.headline !== undefined) bundle.headline = overrides.headline;
+    if (overrides.sub !== undefined) bundle.sub = overrides.sub;
+    if (overrides.label !== undefined) bundle.label = overrides.label;
+    if (overrides.english !== undefined) bundle.english = overrides.english;
+    if (overrides.body !== undefined && overrides.body.length) bundle.body = overrides.body;
+  }
+  return bundle;
 }

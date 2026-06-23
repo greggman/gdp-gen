@@ -112,7 +112,7 @@ export function heavyWeight(ctx: DesignContext): number {
 /** The design's generated text, or null if this design has no text. */
 export function textBundle(ctx: DesignContext): TextBundle | null {
   if (!ctx.text.enabled) return null;
-  return makeBundle(ctx.rng, ctx.text.script, ctx.text.withEnglish);
+  return makeBundle(ctx.rng, ctx.text.script, ctx.text.withEnglish, ctx.text.overrides);
 }
 
 /** A margin proportional to the smaller viewport dimension. */
