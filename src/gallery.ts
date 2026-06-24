@@ -20,6 +20,24 @@ function param(name: string, fallback: number): number {
   return Number.isFinite(n) ? n : fallback;
 }
 
+// The text/script override params (see parseTextParams). Forwarded onto tile
+// links so clicking through reproduces the exact design the tile shows.
+const TEXT_PARAM_KEYS = [
+  'title', 'headline', 'subtitle', 'byline', 'sub', 'body', 'description', 'desc',
+  'label', 'edition', 'english', 'en', 'script',
+];
+
+/** A `?...` query string of just the text params present, or '' if none. */
+function textQuery(params: URLSearchParams): string {
+  const out = new URLSearchParams();
+  for (const k of TEXT_PARAM_KEYS) {
+    const v = params.get(k);
+    if (v !== null) out.set(k, v);
+  }
+  const s = out.toString();
+  return s ? `?${s}` : '';
+}
+
 /** A wrapping grid of fixed-width tiles -- columns fill to the viewport width,
  * so there's no `cols` to specify. */
 function gridStyle(w: number): string {
@@ -118,9 +136,10 @@ function showcaseCompositions(w: number, h: number): void {
       svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
       svg.style.display = 'block';
 
-      // Wrap in a link to the full-page render of this exact seed + composition.
+      // Wrap in a link to the full-page render of this exact seed + composition,
+      // carrying the same text/script overrides so the click reproduces the tile.
       const a = document.createElement('a');
-      a.href = `../index.html#${seed}~${comp.name}`;
+      a.href = `../index.html${textQuery(params)}#${seed}~${comp.name}`;
       a.style.cssText = 'position:relative;display:block;outline:1px solid #444';
       a.appendChild(svg);
       const tag = document.createElement('div');
